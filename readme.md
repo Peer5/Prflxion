@@ -42,7 +42,7 @@ defined socket on `in6addr_any` (`::`), a padding of the IPv4 address to an IPv6
 this padded IPv6 address is returned from `getaddrinfo()` api (or `recvfrom` in our case) as the remote host.
 <br>
 for example, assume the following:
-- A Client with only IPv4 stackwith ip `192.168.1.24`.
+- A Client with only IPv4 stack with ip `192.168.1.24`.
 - A dual-stack enabled Server with IPv4 address `192.168.1.25` and IPv6 address `2002:a00:3::1006`
   that is listening on an `AF_INET6`, UDP (`SOCK_DGRAM`) socket. Bound to address `::` and port 1337.
 <br>
