@@ -64,4 +64,4 @@ After the two candidates are collected, the exploit replaces the IPv6 candidate 
 <br>
 This results in a local mDNS name resolving of the IPv4 address, but the port that the second connection will try to connect with is the IPv6 defined socket, which means the address reported between the peers through `STUN` will be a 4in6 translated address.
 <br>
-This results in adding un-sanitized candidate to the WebRTC stats which are available via the RTCPeerConnection.getStats() method.
+This results in adding un-sanitized candidate to the WebRTC stats which are available via the `RTCPeerConnection.getStats()` method.
