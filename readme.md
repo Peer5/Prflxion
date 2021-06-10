@@ -23,13 +23,13 @@ The function gets the `XOR_MAPPED_ADDRESS` sent by the `STUN` server - which is 
 <br>
 If the address is found within the current candidates, it changes the connection's local candidate to the one it found. Otherwise, it creates a new local candidate (one that has not been generated or sent by the `STUN`) and assumes it to be a `prflx` candidate.
 <br>
-The first problem is that the new candidate isn't [Sanitized by the mDNS Obfuscation]((https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/connection.cc#1297)).
-This sanitization is done mainly in basic_port_allocator.cc when [SignalCandidateReady](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/client/basic_port_allocator.cc#966) is called. This signal is sent in [AddAddress](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc) that adds the candidates after the network interface discovery process.
+The first problem is that the new candidate isn't [Sanitized by the mDNS Obfuscation](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/connection.cc#1297).
+This sanitization is done mainly in `BasicPortAllocatorSession::OnCandidateReady` when [SignalCandidateReady](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/client/basic_port_allocator.cc#962) is called.
 <br>
-But the function `MaybeUpdateLocalCandidate` does not signal this. Instead, it calls [AddPrflxCandidate](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc#426) which just adds it as is to the candidate list.
+But the function `MaybeUpdateLocalCandidate` does not signal this. Instead, it calls [AddPrflxCandidate](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc#418) which adds it without sanitization to the candidate list.
 
 ## The Exploit
-From first view there is no trivial way to exploit that - to create an un-sanitized candidate we would have to somehow represent the local IPv4 in a way that is
+At first sight there seems to be no trivial way to exploit this. i.e. to create an un-sanitized candidate with the local IPv4 address. To achieve that we would have to somehow represent the local IPv4 in a way that is
 on one hand different from candidate addresses created by the interface enumeration, and on the other hand needs to be supported by the network stack.
 <br> To aid us in this task comes IPv6.
 
