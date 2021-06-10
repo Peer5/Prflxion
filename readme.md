@@ -23,13 +23,13 @@ The function gets the `XOR_MAPPED_ADDRESS` sent by the `STUN` server - which is 
 <br>
 If the address is found within the current candidates, it changes the connection's local candidate to the one it found. Otherwise, it creates a new local candidate (one that has not been generated or sent by the `STUN`) and assumes it to be a `prflx` candidate.
 <br>
-The first problem is that the new candidate isn't [Sanitized by the mDNS Obfuscation]((https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/connection.cc#1297)).
-This sanitization is done mainly in basic_port_allocator.cc when [SignalCandidateReady](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/client/basic_port_allocator.cc#966) is called. This signal is sent in [AddAddress](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc) that adds the candidates after the network interface discovery process.
+The first problem is that the new candidate isn't [Sanitized by the mDNS Obfuscation](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/connection.cc#1297).
+This sanitization is done mainly in `BasicPortAllocatorSession::OnCandidateReady` when [SignalCandidateReady](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/client/basic_port_allocator.cc#962) is called.
 <br>
-But the function `MaybeUpdateLocalCandidate` does not signal this. Instead, it calls [AddPrflxCandidate](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc#426) which just adds it as is to the candidate list.
+But the function `MaybeUpdateLocalCandidate` does not signal this. Instead, it calls [AddPrflxCandidate](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc#418) which adds it without sanitization to the candidate list.
 
 ## The Exploit
-From first view there is no trivial way to exploit that - to create an un-sanitized candidate we would have to somehow represent the local IPv4 in a way that is
+At first sight there seems to be no trivial way to exploit this. i.e. to create an un-sanitized candidate with the local IPv4 address. To achieve that we would have to somehow represent the local IPv4 in a way that is
 on one hand different from candidate addresses created by the interface enumeration, and on the other hand needs to be supported by the network stack.
 <br> To aid us in this task comes IPv6.
 
@@ -57,7 +57,7 @@ So, to exploit this we would need to initiate a `STUN_BIND_REQUEST` that will cr
 First, we don't define any `STUN` server so the `STUN_BIND_REQUEST`s will be sent directly to the other peer without translation. 
 Fortunately, the WebRTC `NetworkManagerBase` class [binds two UDP sockets](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/rtc_base/network.cc#284) - one on `INADDR_ANY` (`0.0.0.0`), and another on `in6addr_any` (`::`). These Sockets are used for the `STUN` negotiation.
 <br>
-So, when we create a `RTCPeerConnection` instance, we would expect that two candidates will be created (and obfuscated) - one with IPv4 and one with IPv6 with corresponding ports.
+So, when we create a `RTCPeerConnection` instance, we would expect that two candidates will be created (and obfuscated) - one for the IPv4 address and another for the IPv6 address (each with its own UDP port)
 These two candidates would have two different mDNS names (as per [creation](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc#319)).
 <br>
 After the two candidates are collected, the exploit replaces the IPv6 candidate mDNS hostname (in JS) with the IPv4 candidate mDNS hostname. A second local connection is passed the malicious IPv6 candidate through `RTCPeerConnection.addIceCandidate()`.
