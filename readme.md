@@ -56,7 +56,7 @@ So, to exploit this we would need to initiate a `STUN_BIND_REQUEST` that will cr
 First, we don't define any `STUN` server so the `STUN_BIND_REQUEST`s will be sent directly to the other peer without translation. 
 Fortunately, the WebRTC `NetworkManagerBase` class [binds two UDP sockets](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/rtc_base/network.cc#284) - one on `INADDR_ANY` (`0.0.0.0`), and another on `in6addr_any` (`::`). These Sockets are used for the `STUN` negotiation.
 <br>
-So, when we create a `RTCPeerConnection` instance, we would expect that two candidates will be created (and obfuscated) - one for the IPv4 address and another for the IPv6 address (each with its own UDP port)
+So, when we create a `RTCPeerConnection` instance, we would expect that two mDNS candidates will be created (and obfuscated) - one for the IPv4 address and another for the IPv6 address (each with its own UDP port)
 These two candidates would have two different mDNS names (as per [creation](https://webrtc.googlesource.com/src/+/9f9bf38805e14688acef01fe6814b8ce3a98c09c/p2p/base/port.cc#319)).
 <br>
 After the two candidates are collected, the exploit replaces the IPv6 candidate mDNS hostname (in JS) with the IPv4 candidate mDNS hostname. A second local connection is passed the malicious IPv6 candidate through `RTCPeerConnection.addIceCandidate()`.
