@@ -45,11 +45,11 @@ for example, assume the following:
 - A Client with only IPv4 stack with ip `192.168.1.24`.
 - A dual-stack enabled Server with IPv4 address `192.168.1.25` and IPv6 address `2002:a00:3::1006`
   that is listening on an `AF_INET6`, UDP (`SOCK_DGRAM`) socket. Bound to address `::` and port 1337.
+  <br>
 When the client connects to `192.168.1.25:1337`, the Server's Kernel pads the IPv4 of the client 
   because the server is expecting an IPv6 source IP when `recvfrom` is called.
 Thus, the Server will see the client as `::ffff:192.168.1.24`.
   This is the address which will be returned as the `XOR_MAPPED_ADDRESS` in the following exploitation.
-<br> 
 
 ### Exploitation
 So, to exploit this we would need to initiate a `STUN_BIND_REQUEST` that will create a `STUN_BIND_RESPONSE` that has the 4in6 local IPv4 as `XOR_MAPPED_ADDRESS`.
